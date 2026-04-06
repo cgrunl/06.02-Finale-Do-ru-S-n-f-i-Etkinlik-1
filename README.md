@@ -1,209 +1,104 @@
-# CampusConnect — Polyglot API Platformu
+# Üniversite Platformu - Polyglot Backend Projesi
 Öğrenci: çağrı ünlü
 Okul No: 24080410029
 Üniversite: Bitlis Eren Üniversitesi
 
 ---
 
-## 📋 Proje Açıklaması
+## 🚀 Proje Hakkında Genel Bilgi
 
-**CampusConnect**, üniversite öğrenci toplulukları için geliştirilmiş bir etkinlik yönetim platformunun backend API'sidir. Platform, öğrencilerin etkinlik oluşturmasına, katılmasına ve yönetmesine olanak tanır. Gerçek zamanlı analitik verileri ve webhook entegrasyonları ile modern bir mikroservis mimarisine sahiptir.
+**Üniversite Etkinlik Yönetim Sistemi (CampusConnect)**, üniversitedeki öğrenci kulüplerinin ve topluluklarının etkinliklerini planlamaları, duyurmaları ve yönetmeleri amacıyla tasarlanmış kapsamlı bir RESTful ve GraphQL tabanlı backend platformudur. Birbiriyle haberleşen farklı mikroservisleri barındıran bu proje, gerçek zamanlı bildirimler ve detaylı analitik raporlamalar sunar.
 
-## 🏗️ Mimari Yapı
+## 🏗️ Projenin Mimari Yapısı
 
-```
-┌─────────────────────────────────────────────────────────────┐
-│                      CampusConnect                          │
-├──────────────────────┬──────────────────────────────────────┤
-│   NestJS Servisi     │         Go Servisi                   │
-│   (Port 3000)        │         (Port 8080)                  │
-│                      │                                      │
-│  • User CRUD         │  • Webhook Receiver                  │
-│  • Event CRUD        │  • Analytics API                     │
-│  • Auth (JWT)        │  • API Key Auth                      │
-│  • GraphQL API       │  • Rate Limiting                     │
-│  • Webhook Sender    │  • Goroutine Async                   │
-│  • Swagger UI        │                                      │
-├──────────────────────┴──────────────────────────────────────┤
-│                    PostgreSQL (Port 5432)                    │
-│                    Ortak Veritabanı                          │
-└─────────────────────────────────────────────────────────────┘
-```
+Proje temel olarak iki ana servisten ve ortak bir veritabanından oluşmaktadır:
 
-### Teknoloji Stack
+- **Ana Servis (NestJS - Port 3000):** Kullanıcı işlemleri (Kayıt, Giriş, Yetkilendirme), etkinliklerin oluşturulup listelenmesi (REST + GraphQL) ve diğer servislere webhook gönderiminden sorumludur.
+- **Analitik ve Webhook Servisi (Go - Port 8080):** NestJS tarafından gönderilen asenkron webhook'ları dinler, etkinliklerle ilgili yoğun istatistik ve analitik hesaplamaları yüksek performansla gerçekleştirir. Rate limiting ve API Key kontrollerini barındırır.
+- **Veritabanı Katmanı (PostgreSQL):** Her iki servisin de bağlandığı ana veri deposudur.
 
-| Katman | Teknoloji |
-|--------|-----------|
-| Ana Servis | NestJS (TypeScript), Prisma ORM |
-| Yardımcı Servis | Go 1.21+, Gin Framework |
-| Veritabanı | PostgreSQL 15 |
-| Kimlik Doğrulama | JWT (JSON Web Token), bcrypt |
-| API Dökümantasyon | Swagger (OpenAPI 3.0) |
-| Konteyner | Docker, Docker Compose |
-| API Protokolleri | REST, GraphQL |
+### Kullanılan Teknolojiler
+- **Programlama Dilleri:** TypeScript (Node.js), Go (Golang)
+- **Framework'ler:** NestJS, Gin
+- **Veritabanı & ORM:** PostgreSQL, Prisma ORM
+- **Authentication:** JWT, bcrypt, API Anahtarı
+- **Dokümantasyon:** Swagger (OpenAPI)
+- **Dağıtım (Deployment):** Docker ve Docker Compose
 
-## 📁 Klasör Yapısı
+## 🔐 Ortam Değişkenleri Konfigürasyonu
 
-```
-campusconnect/
-├── docker-compose.yml          # Tüm servislerin orkestrasyon dosyası
-├── .env.example                # Çevre değişkenleri şablonu
-├── .gitignore                  # Git ignore kuralları
-├── README.md                   # Bu dosya
-├── requests.http               # API test dosyası (VS Code REST Client)
-├── db/
-│   └── init.sql                # Veritabanı başlatma scripti
-├── nestjs-service/             # Ana servis (NestJS)
-│   ├── Dockerfile
-│   ├── package.json
-│   ├── tsconfig.json
-│   ├── prisma/
-│   │   └── schema.prisma
-│   └── src/
-│       ├── main.ts
-│       ├── app.module.ts
-│       ├── common/             # Ortak modüller (filters, guards, pipes)
-│       ├── auth/               # JWT kimlik doğrulama
-│       ├── users/              # Kullanıcı CRUD
-│       ├── events/             # Etkinlik CRUD + GraphQL
-│       └── webhooks/           # Webhook sender
-└── go-service/                 # Yardımcı servis (Go)
-    ├── Dockerfile
-    ├── go.mod
-    ├── go.sum
-    ├── main.go
-    ├── internal/
-    │   ├── config/             # Konfigürasyon
-    │   ├── database/           # Veritabanı bağlantısı
-    │   ├── middleware/         # API Key, Rate Limit
-    │   ├── handlers/           # HTTP handler'ları
-    │   ├── models/             # Veri modelleri
-    │   └── services/           # İş mantığı
-    └── pkg/
-        └── rfc7807/            # Standart hata formatı
-```
+Projeyi ayağa kaldırmak için ana dizinde bulunan `.env.example` dosyasının adını `.env` olarak değiştirin ve içeriğini kendinize göre güncelleyin. Temel değişkenler şunlardır:
+- `POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB` (Veritabanı bağlantı bilgileri)
+- `JWT_SECRET`, `JWT_EXPIRES_IN` (Güvenlik ve oturum yönetimi)
+- `WEBHOOK_SECRET`, `API_KEY` (Servisler arası haberleşme güvenliği)
+- `RATE_LIMIT_RPM` (Performans ve güvenlik sınırlaması)
 
-## 🔐 Çevre Değişkenleri (Environment Variables)
+## 💻 Kurulum ve Çalıştırma
 
-Projeyi çalıştırmadan önce `.env.example` dosyasını `.env` olarak kopyalayın:
-
+### Docker ile Hızlı Başlangıç
+Sisteminizde Docker yüklüyse, aşağıdaki komutla tüm projeyi tek seferde ayağa kaldırabilirsiniz:
 ```bash
-cp .env.example .env
-```
-
-| Değişken | Açıklama | Varsayılan Değer |
-|----------|----------|------------------|
-| `POSTGRES_USER` | PostgreSQL kullanıcı adı | `campusconnect` |
-| `POSTGRES_PASSWORD` | PostgreSQL şifresi | `campusconnect_secret` |
-| `POSTGRES_DB` | Veritabanı adı | `campusconnect` |
-| `JWT_SECRET` | JWT imza anahtarı | — |
-| `JWT_EXPIRES_IN` | Token geçerlilik süresi | `1d` |
-| `WEBHOOK_SECRET` | Webhook HMAC anahtarı | — |
-| `API_KEY` | Go servis API anahtarı | — |
-| `RATE_LIMIT_RPM` | Dakika başı istek limiti | `60` |
-
-## 🚀 Kurulum ve Çalıştırma
-
-### Gereksinimler
-- Docker & Docker Compose
-- (Opsiyonel) Node.js 18+, Go 1.21+
-
-### Docker ile Çalıştırma
-
-```bash
-# 1. Repoyu klonlayın
-git clone <repo-url>
-cd campusconnect
-
-# 2. Çevre değişkenlerini ayarlayın
+# Gerekli çevre değişkeni dosyasını oluşturun
 cp .env.example .env
 
-# 3. Servisleri başlatın
+# Tüm container'ları derleyip başlatın
 docker-compose up --build
-
-# 4. Servislerin hazır olduğunu doğrulayın
-# NestJS:  http://localhost:3000/api-docs
-# Go:     http://localhost:8080/api/v1/analytics/popular
 ```
+Başarıyla çalıştığında erişim noktaları:
+- NestJS API Dokümantasyonu: `http://localhost:3000/api-docs`
+- Go Analitik Servisi: `http://localhost:8080/api/v1/analytics/popular`
 
-### Yerel Geliştirme
+### Lokal Ortamda Geliştirme İçin Çalıştırma
 
+**NestJS (Ana Backend) için:**
 ```bash
-# NestJS servisi
 cd nestjs-service
 npm install
 npx prisma generate
 npx prisma migrate dev
 npm run start:dev
+```
 
-# Go servisi
+**Go (Analitik Servis) için:**
+```bash
 cd go-service
 go mod download
 go run main.go
 ```
 
-## 📡 API Endpoint Tablosu
+## 🛠️ API Entegrasyon Noktaları (Endpoints)
 
-### NestJS Servisi (Port 3000)
+### 1- Ana Servis (NestJS) Endpoints
+*Kullanıcı ve Etkinlik Yönetimi:*
+- `POST /api/v1/auth/register` - Sisteme yeni kullanıcı kaydı
+- `POST /api/v1/auth/login` - Oturum açma (JWT temini)
+- `GET /api/v1/events` - Etkinlik kataloğu
+- `POST /api/v1/events` - Yeni etkinlik planlama (JWT Gerektirir)
+- `PATCH / DELETE /api/v1/events/:id` - Etkinlik düzenleme ve silme işlemleri
 
-#### REST API
+*GraphQL İstekleri (`/graphql`):*
+- `events`, `myEvents` (Sorgu / Query)
+- `joinEvent`, `leaveEvent` (Değişiklik / Mutation)
 
-| Metod | Endpoint | Açıklama | Auth |
-|-------|----------|----------|------|
-| POST | `/api/v1/auth/register` | Kullanıcı kaydı | ❌ |
-| POST | `/api/v1/auth/login` | Giriş yapma (JWT döner) | ❌ |
-| POST | `/api/v1/users` | Kullanıcı oluştur | ❌ |
-| GET | `/api/v1/users` | Tüm kullanıcıları listele | ❌ |
-| GET | `/api/v1/users/:id` | Kullanıcı detayı | ❌ |
-| PATCH | `/api/v1/users/:id` | Kullanıcı güncelle | ❌ |
-| DELETE | `/api/v1/users/:id` | Kullanıcı sil | ❌ |
-| POST | `/api/v1/events` | Etkinlik oluştur | ✅ JWT |
-| GET | `/api/v1/events` | Etkinlikleri listele (Pagination, Filter, Sort) | ❌ |
-| GET | `/api/v1/events/:id` | Etkinlik detayı | ❌ |
-| PATCH | `/api/v1/events/:id` | Etkinlik güncelle | ✅ JWT |
-| DELETE | `/api/v1/events/:id` | Etkinlik sil | ✅ JWT |
+### 2- Go Servisi Endpoints
+*İstatistik ve Sistem Haberleşmesi:*
+- `POST /api/v1/webhooks/events` - NestJS'den gelen webhook'ların işlenmesi
+- `GET /api/v1/analytics/popular` - En çok ilgi gören etkinlikler (API Key gerektirir)
+- `GET /api/v1/analytics/weekly` - Haftalık istatistik verileri
 
-#### GraphQL (`/graphql`)
+## 🛡️ Hata Yönetimi Standardı (RFC 7807)
 
-| Tür | İşlem | Açıklama |
-|-----|-------|----------|
-| Query | `events` | Tüm etkinlikleri listele |
-| Query | `myEvents` | Kullanıcının katıldığı etkinlikler |
-| Mutation | `joinEvent` | Etkinliğe katıl |
-| Mutation | `leaveEvent` | Etkinlikten ayrıl |
-
-### Go Servisi (Port 8080)
-
-| Metod | Endpoint | Açıklama | Auth |
-|-------|----------|----------|------|
-| POST | `/api/v1/webhooks/events` | Webhook alıcı | Signature |
-| GET | `/api/v1/analytics/popular` | Popüler etkinlikler | API Key |
-| GET | `/api/v1/analytics/categories` | Kategori bazlı analitik | API Key |
-| GET | `/api/v1/analytics/weekly` | Haftalık analitik | API Key |
-
-## 🛡️ Güvenlik
-
-- **JWT Authentication:** Event CRUD işlemleri JWT token ile korunur.
-- **API Key:** Go servisi tüm endpoint'lerde `X-API-Key` header'ı arar.
-- **Rate Limiting:** IP bazlı 60 istek/dakika limiti.
-- **Webhook Signature:** `X-Webhook-Signature` ile HMAC-SHA256 doğrulama.
-- **Password Hashing:** bcrypt ile şifre hashleme.
-- **RFC 7807:** Standart hata formatı tüm servislerde uygulanır.
-
-## 📝 Hata Formatı (RFC 7807)
-
-Tüm hatalar aşağıdaki standart formatta döner:
-
+API'ler genelinde standart bir hata dönüş yapısı (RFC 7807 Standardı) benimsenmiştir.
+Örnek hata yanıtı:
 ```json
 {
-  "type": "https://campusconnect.api/errors/not-found",
-  "title": "Resource Not Found",
+  "type": "https://api.campusconnect/errors/not-found",
+  "title": "Kayıt Bulunamadı",
   "status": 404,
-  "detail": "ID 123 ile etkinlik bulunamadı.",
-  "instance": "/api/v1/events/123"
+  "detail": "Belirtilen ID numarasına sahip etkinlik sistemde mevcut değil.",
+  "instance": "/api/v1/events/99"
 }
 ```
 
-## 📄 Lisans
-
-Bu proje akademik amaçlı geliştirilmiştir — Bitlis Eren Üniversitesi, 2026.
+---
+*Bu proje 2026 yılı bitirme / final etkinliği kapsamında geliştirilmiştir.*
