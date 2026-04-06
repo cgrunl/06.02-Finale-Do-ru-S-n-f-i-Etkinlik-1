@@ -7,7 +7,7 @@ import * as crypto from 'crypto';
 export class WebhookService {
   private readonly logger = new Logger(WebhookService.name);
 
-  constructor(private readonly configService: ConfigService) {}
+  constructor(private readonly configService: ConfigService) { }
 
   /**
    * Yeni etkinlik oluşturulduğunda Go servisine webhook gönderir.

@@ -1,6 +1,6 @@
 # CampusConnect — Polyglot API Platformu
-Öğrenci: Muhammed Furkan Güngördü
-Okul No: 24080410024
+Öğrenci: çağrı ünlü
+Okul No: 24080410029
 Üniversite: Bitlis Eren Üniversitesi
 
 ---
