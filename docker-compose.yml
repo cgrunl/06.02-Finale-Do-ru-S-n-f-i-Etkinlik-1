@@ -1,0 +1,72 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: campusconnect-db
+    restart: unless-stopped
+    ports:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-campusconnect}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-campusconnect_secret}
+      POSTGRES_DB: ${POSTGRES_DB:-campusconnect}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U ${POSTGRES_USER:-campusconnect}']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - campusconnect-network
+
+  nestjs-service:
+    build:
+      context: ./nestjs-service
+      dockerfile: Dockerfile
+    container_name: campusconnect-nestjs
+    restart: unless-stopped
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      DATABASE_URL: postgresql://${POSTGRES_USER:-campusconnect}:${POSTGRES_PASSWORD:-campusconnect_secret}@postgres:5432/${POSTGRES_DB:-campusconnect}?schema=public
+      JWT_SECRET: ${JWT_SECRET:-super_secret_jwt_key_change_in_production}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-1d}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-webhook_shared_secret_key}
+      GO_SERVICE_URL: http://go-service:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - campusconnect-network
+
+  go-service:
+    build:
+      context: ./go-service
+      dockerfile: Dockerfile
+    container_name: campusconnect-go
+    restart: unless-stopped
+    ports:
+      - '8080:8080'
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-campusconnect}:${POSTGRES_PASSWORD:-campusconnect_secret}@postgres:5432/${POSTGRES_DB:-campusconnect}?sslmode=disable
+      API_KEY: ${API_KEY:-campusconnect_api_key_change_in_production}
+      WEBHOOK_SECRET: ${WEBHOOK_SECRET:-webhook_shared_secret_key}
+      RATE_LIMIT_RPM: ${RATE_LIMIT_RPM:-60}
+      PORT: 8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - campusconnect-network
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  campusconnect-network:
+    driver: bridge

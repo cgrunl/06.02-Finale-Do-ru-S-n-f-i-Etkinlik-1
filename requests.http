@@ -1,0 +1,318 @@
+### =====================================================
+### CampusConnect API Test Dosyası
+### VS Code REST Client / IntelliJ HTTP Client ile kullanılır
+### =====================================================
+
+### Değişkenler
+@nestjs_url = http://localhost:3000/api/v1
+@go_url = http://localhost:8080/api/v1
+@api_key = campusconnect_api_key_change_in_production
+
+### =====================================================
+### 1. AUTH - Kullanıcı Kaydı
+### =====================================================
+POST {{nestjs_url}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "furkan@beu.edu.tr",
+  "password": "Sifre123!",
+  "firstName": "Furkan",
+  "lastName": "Yılmaz",
+  "university": "Bitlis Eren Üniversitesi",
+  "department": "Bilgisayar Mühendisliği"
+}
+
+### =====================================================
+### 2. AUTH - Giriş Yap (accessToken'ı kopyalayın)
+### =====================================================
+POST {{nestjs_url}}/auth/login
+Content-Type: application/json
+
+{
+  "email": "furkan@beu.edu.tr",
+  "password": "Sifre123!"
+}
+
+### =====================================================
+### 3. AUTH - İkinci kullanıcı kaydı (test amaçlı)
+### =====================================================
+POST {{nestjs_url}}/auth/register
+Content-Type: application/json
+
+{
+  "email": "ali@beu.edu.tr",
+  "password": "Sifre456!",
+  "firstName": "Ali",
+  "lastName": "Kaya",
+  "university": "Bitlis Eren Üniversitesi",
+  "department": "Elektrik Mühendisliği"
+}
+
+### =====================================================
+### 4. USERS - Tüm kullanıcıları listele
+### =====================================================
+GET {{nestjs_url}}/users
+
+### =====================================================
+### 5. USERS - Kullanıcı oluştur (POST)
+### =====================================================
+POST {{nestjs_url}}/users
+Content-Type: application/json
+
+{
+  "email": "mehmet@beu.edu.tr",
+  "password": "Sifre789!",
+  "firstName": "Mehmet",
+  "lastName": "Demir",
+  "university": "Bitlis Eren Üniversitesi",
+  "department": "Makine Mühendisliği"
+}
+
+### =====================================================
+### 6. USERS - ID ile kullanıcı getir
+### (Login'den dönen user.id değerini buraya yapıştırın)
+### =====================================================
+GET {{nestjs_url}}/users/{{user_id}}
+
+### =====================================================
+### 7. USERS - Kullanıcı güncelle (PATCH)
+### =====================================================
+PATCH {{nestjs_url}}/users/{{user_id}}
+Content-Type: application/json
+
+{
+  "firstName": "Furkan Updated",
+  "university": "Güncellenmiş Üniversite"
+}
+
+### =====================================================
+### 8. USERS - Duplicate email test (409 Conflict beklenir)
+### =====================================================
+POST {{nestjs_url}}/users
+Content-Type: application/json
+
+{
+  "email": "furkan@beu.edu.tr",
+  "password": "Test123!",
+  "firstName": "Test",
+  "lastName": "User"
+}
+
+### =====================================================
+### 9. EVENTS - Etkinlik oluştur (JWT gerekli!)
+### (Login'den dönen accessToken'ı Bearer sonrasına yapıştırın)
+### =====================================================
+# @name createEvent
+POST {{nestjs_url}}/events
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "title": "Yapay Zeka Konferansı",
+  "description": "Yapay zeka alanında son gelişmeler ve uygulamalar üzerine kapsamlı bir konferans.",
+  "category": "Teknoloji",
+  "city": "Bitlis",
+  "location": "BEÜ Konferans Salonu",
+  "eventDate": "2026-05-15T10:00:00Z",
+  "maxParticipants": 100
+}
+
+### =====================================================
+### 10. EVENTS - İkinci etkinlik oluştur
+### =====================================================
+POST {{nestjs_url}}/events
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "title": "Kampüs Futbol Turnuvası",
+  "description": "Fakülteler arası futbol turnuvası. Kayıtlar açık!",
+  "category": "Spor",
+  "city": "Bitlis",
+  "location": "BEÜ Spor Sahası",
+  "eventDate": "2026-06-01T14:00:00Z",
+  "maxParticipants": 50
+}
+
+### =====================================================
+### 11. EVENTS - Üçüncü etkinlik oluştur
+### =====================================================
+POST {{nestjs_url}}/events
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "title": "Müzik Festivali",
+  "description": "Bahar döneminin en büyük müzik etkinliği!",
+  "category": "Kültür",
+  "city": "İstanbul",
+  "location": "Kampüs Amfitiyatro",
+  "eventDate": "2026-05-20T18:00:00Z",
+  "maxParticipants": 200
+}
+
+### =====================================================
+### 12. EVENTS - Tüm etkinlikleri listele (Pagination)
+### =====================================================
+GET {{nestjs_url}}/events?page=1&limit=10
+
+### =====================================================
+### 13. EVENTS - Kategori ile filtrele
+### =====================================================
+GET {{nestjs_url}}/events?category=Teknoloji
+
+### =====================================================
+### 14. EVENTS - Şehir ile filtrele
+### =====================================================
+GET {{nestjs_url}}/events?city=Bitlis
+
+### =====================================================
+### 15. EVENTS - Sıralama (tarih, artan)
+### =====================================================
+GET {{nestjs_url}}/events?sort=eventDate&order=asc
+
+### =====================================================
+### 16. EVENTS - Kombine filtre ve sıralama
+### =====================================================
+GET {{nestjs_url}}/events?category=Spor&city=Bitlis&sort=title&order=asc&page=1&limit=5
+
+### =====================================================
+### 17. EVENTS - ID ile etkinlik detayı
+### =====================================================
+GET {{nestjs_url}}/events/{{event_id}}
+
+### =====================================================
+### 18. EVENTS - Etkinlik güncelle (JWT gerekli, sadece organizör)
+### =====================================================
+PATCH {{nestjs_url}}/events/{{event_id}}
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "title": "Güncellenmiş Yapay Zeka Konferansı",
+  "maxParticipants": 150
+}
+
+### =====================================================
+### 19. EVENTS - Etkinlik sil (JWT gerekli, sadece organizör)
+### NOT: Silmek istemiyorsanız bu isteği çalıştırmayın!
+### =====================================================
+# DELETE {{nestjs_url}}/events/{{event_id}}
+# Authorization: Bearer {{access_token}}
+
+### =====================================================
+### 20. GRAPHQL - Tüm etkinlikleri sorgula
+### =====================================================
+POST http://localhost:3000/graphql
+Content-Type: application/json
+
+{
+  "query": "query { events { id title description category city location eventDate maxParticipants organizer { id firstName lastName university } _count { participants } createdAt } }"
+}
+
+### =====================================================
+### 21. GRAPHQL - Etkinliğe katıl (JWT gerekli)
+### =====================================================
+POST http://localhost:3000/graphql
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "query": "mutation { joinEvent(eventId: \"{{event_id}}\") { message eventId userId } }"
+}
+
+### =====================================================
+### 22. GRAPHQL - Katıldığım etkinlikler (JWT gerekli)
+### =====================================================
+POST http://localhost:3000/graphql
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "query": "query { myEvents { id title category city eventDate joinedAt organizer { firstName lastName } _count { participants } } }"
+}
+
+### =====================================================
+### 23. GRAPHQL - Etkinlikten ayrıl (JWT gerekli)
+### =====================================================
+POST http://localhost:3000/graphql
+Content-Type: application/json
+Authorization: Bearer {{access_token}}
+
+{
+  "query": "mutation { leaveEvent(eventId: \"{{event_id}}\") { message eventId userId } }"
+}
+
+### =====================================================
+### 24. GO SERVICE - Health Check
+### =====================================================
+GET http://localhost:8080/health
+
+### =====================================================
+### 25. GO ANALYTICS - Popüler etkinlikler
+### =====================================================
+GET {{go_url}}/analytics/popular
+X-API-Key: {{api_key}}
+
+### =====================================================
+### 26. GO ANALYTICS - Kategori istatistikleri
+### =====================================================
+GET {{go_url}}/analytics/categories
+X-API-Key: {{api_key}}
+
+### =====================================================
+### 27. GO ANALYTICS - Haftalık istatistikler
+### =====================================================
+GET {{go_url}}/analytics/weekly
+X-API-Key: {{api_key}}
+
+### =====================================================
+### 28. GO WEBHOOK - Manuel webhook testi
+### (Normalde NestJS otomatik gönderir)
+### =====================================================
+POST {{go_url}}/webhooks/events
+Content-Type: application/json
+X-API-Key: {{api_key}}
+X-Webhook-Signature: test_signature_replace_with_valid_hmac
+
+{
+  "eventType": "event.created",
+  "timestamp": "2026-04-06T12:00:00Z",
+  "data": {
+    "id": "test-event-id-123",
+    "title": "Test Etkinliği",
+    "category": "Test",
+    "city": "Bitlis",
+    "eventDate": "2026-06-15T10:00:00Z",
+    "organizerId": "test-user-id",
+    "maxParticipants": 50
+  }
+}
+
+### =====================================================
+### 29. GO - API Key olmadan istek (401 beklenir)
+### =====================================================
+GET {{go_url}}/analytics/popular
+
+### =====================================================
+### 30. GO - Geçersiz API Key (401 beklenir)
+### =====================================================
+GET {{go_url}}/analytics/popular
+X-API-Key: invalid_key
+
+### =====================================================
+### 31. USERS - Kullanıcı sil
+### NOT: Dikkatli kullanın, cascade silme etkinlikleri de siler!
+### =====================================================
+# DELETE {{nestjs_url}}/users/{{user_id}}
+
+### =====================================================
+### 32. SWAGGER UI
+### Tarayıcıda açın: http://localhost:3000/api-docs
+### =====================================================
+
+### =====================================================
+### 33. GRAPHQL Playground
+### Tarayıcıda açın: http://localhost:3000/graphql
+### =====================================================
